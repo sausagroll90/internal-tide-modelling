@@ -20,30 +20,23 @@ T = np.zeros(num_modes, dtype="cdouble")
 A = np.zeros(num_modes, dtype="cdouble")
 B = np.zeros(num_modes, dtype="cdouble")
 
-# for n in range(1, num_modes+1):
-#     c[n-1] = ((N**2)*(H**2))/((n**2)*(pi**2))
-#     k[n-1] = sqrt(omega**2 - f**2)/(c[n-1])
-#     T[n-1] = complex(0, (8*rhobar*U_0*hmax*(k[n-1]**2)*(c[n-1]**2))/(omega*H*L))
-#     A[n-1] = -1j*T[n-1]/((k[n-1]**3)*L) - T[n-1]/(2*k[n-1]**2)
-#     B[n-1] = (1j*T[n-1]/((k[n-1]**3)*L) + T[n-1]/(2*k[n-1]**2))*np.exp(1j*k[n-1]*L)
-
 for n in range(1, num_modes+1):
     c[n-1] = (N*H)/(n*pi)
     k[n-1] = sqrt(omega**2 - f**2)/(c[n-1])
     T[n-1] = 2j*rhobar*U_0*(k[n-1]**2)*(c[n-1]**2)/(omega*H)
-    A[n-1] = -(1j*T[n-1]/(k[n-1]**3))*(4*hmax/L**2) - (T[n-1]/(k[n-1]**2))*(2*hmax/L)
-    B[n-1] = ((1j*T[n-1]/(k[n-1]**3))*(4*hmax/L**2) + (T[n-1]/(k[n-1]**2))*(2*hmax/L))*np.exp(1j*k[n-1]*L)
+    A[n-1] = (2j*(pi**2)*T[n-1]*hmax)/((k[n-1]**3)*(L**2) - 4*(pi**2)*k[n-1])
+    B[n-1] = -((2j*(pi**2)*T[n-1]*hmax)/((k[n-1]**3)*(L**2) - 4*(pi**2)*k[n-1]))*np.exp(1j*k[n-1]*L)
 
 def psi_n(n, z):
     return ((-1)**n)*cos((n*pi*z)/H)
 
 def phat_n(n, x):
     if x < 0:
-        return (A[n-1] + B[n-1] + (T[n-1]/(k[n-1]**2))*(4*hmax/L))*np.exp(-1j*k[n-1]*x)
+        return (A[n-1] + B[n-1])*np.exp(-1j*k[n-1]*x)
     elif x >= 0 and x <= L:
-        return A[n-1]*np.exp(1j*k[n-1]*x) + B[n-1]*np.exp(-1j*k[n-1]*x) + (T[n-1]/(k[n-1]**2))*(4*hmax/L)*(1-2*x/L)
+        return A[n-1]*np.exp(1j*k[n-1]*x) + B[n-1]*np.exp(-1j*k[n-1]*x) + ((2*pi*T[n-1]*hmax)/(L*(k[n-1]**2 - 4*pi**2/L**2)))*sin(2*pi*x/L)
     elif x > L:
-        return (A[n-1] + B[n-1]*np.exp(-2j*k[n-1]*L) - (T[n-1]/(k[n-1]**2))*(4*hmax/L)*np.exp(-1j*k[n-1]*L))*np.exp(1j*k[n-1]*x)
+        return (A[n-1] + B[n-1]*np.exp(-2j*k[n-1]*L))*np.exp(1j*k[n-1]*x)
 
 def pprime_n(n, x, t):
     return np.real(phat_n(n, x)*np.exp(-1j*omega*t))
