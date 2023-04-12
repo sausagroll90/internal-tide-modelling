@@ -8,6 +8,7 @@ omega = 0.00014
 f = 0.00005
 U_0 = 0.04
 rhobar = 1025
+g = 9.8
 
 hmax = 500
 L = 10000
@@ -68,31 +69,55 @@ def u(x, z, t):
         total += u_n(n, x, t) * psi_n(n, z)
     return total
 
-samples = 500
-width = 300000
-xs = np.linspace(-width, L + width, samples)
-ys = np.zeros(samples)
+# samples = 500
+# width = 300000
+# xs = np.linspace(-width, L + width, samples)
+# ys = np.zeros(samples)
 
-for h in range(5):
-    z =  -h*1000
-    plt.figure()
-    plt.axis([-width, L + width, -100, 100])
-    plt.xlabel("x")
-    plt.ylabel("p\'")
-    plt.title("h = " + str(z))
-    for t in range(4):
-        for i in range(len(xs)):
-            ys[i] = pprime(xs[i], z, t*pi/(2*omega))
-        plt.plot(xs, ys)
+# for h in range(5):
+#     z =  -h*1000
+#     plt.figure()
+#     plt.axis([-width, L + width, -100, 100])
+#     plt.xlabel("x")
+#     plt.ylabel("p\'")
+#     plt.title("h = " + str(z))
+#     for t in range(4):
+#         for i in range(len(xs)):
+#             ys[i] = pprime(xs[i], z, t*pi/(2*omega))
+#         plt.plot(xs, ys)
 
-for h in range(5):
-    z =  -h*1000
-    plt.figure()
-    plt.axis([-width, L + width, -0.3, 0.3])
-    plt.xlabel("x")
-    plt.ylabel("u")
-    plt.title("h = " + str(z))
-    for t in range(4):
-        for i in range(len(xs)):
-            ys[i] = u(xs[i], z, t*pi/(2*omega))
-        plt.plot(xs, ys)
+# for h in range(5):
+#     z =  -h*1000
+#     plt.figure()
+#     plt.axis([-width, L + width, -0.3, 0.3])
+#     plt.xlabel("x")
+#     plt.ylabel("u")
+#     plt.title("h = " + str(z))
+#     for t in range(4):
+#         for i in range(len(xs)):
+#             ys[i] = u(xs[i], z, t*pi/(2*omega))
+#         plt.plot(xs, ys)
+
+width = 200000
+xsamples = 100
+zsamples = 100
+
+xs = np.linspace(-width, L + width, xsamples)
+zs = np.linspace(-4000, 0, zsamples)
+
+pprimes = np.zeros((zsamples, xsamples))
+pzeros = np.zeros((zsamples, xsamples))
+ps = np.zeros((zsamples, xsamples))
+
+us = np.zeros((zsamples, xsamples))
+
+for zm in range(zsamples):
+    for xm in range(xsamples):
+        pprimes[zm, xm] = pprime(xs[xm], zs[zm], 0)
+        pzeros[zm, xm] = -rhobar*g*zs[zm]/100000
+        us[zm, xm] = u(xs[xm], zs[zm], 0)
+
+ps = pprimes + pzeros
+plt.contour(xs, zs, ps, 10)
+# plt.figure()
+# plt.contour(xs, zs, us, 5)
