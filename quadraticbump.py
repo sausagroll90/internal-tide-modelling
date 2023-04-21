@@ -6,12 +6,12 @@ N = 0.003
 H = 4000
 omega = 0.00014
 f = 0.00005
-U_0 = 0.04
+U_0 = 10000 #for exaggeration, real life is =0.04
 rhobar = 1025
 g = 9.8
 
-hmax = 500
-L = 10000
+hmax = 200
+L = 30000
 
 num_modes=20
 
@@ -99,11 +99,9 @@ def plotu(samples, width):
                 ys[i] = u(xs[i], z, t*pi/(2*omega))
             plt.plot(xs, ys)
             
-            
-            
 def plotcontour(xsamples, zsamples, width):
     width = 200000
-    xsamples = 100
+    xsamples = 250
     zsamples = 100
     
     xs = np.linspace(-width, L + width, xsamples)
@@ -118,15 +116,19 @@ def plotcontour(xsamples, zsamples, width):
     for zm in range(zsamples):
         for xm in range(xsamples):
             pprimes[zm, xm] = pprime(xs[xm], zs[zm], 0)
-            pzeros[zm, xm] = -rhobar*g*zs[zm]/100000 #have to do /100000 to make perturbations visible
+            pzeros[zm, xm] = -rhobar*g*zs[zm]
             #us[zm, xm] = u(xs[xm], zs[zm], 0)
     
     ps = pprimes + pzeros
-    plt.contour(xs, zs, ps, 10)
-    # plt.figure()
-    # plt.contour(xs, zs, us, 5)
+    fig, ax = plt.subplots()
+    ax.contour(xs, zs, ps, 10, colors="k")
+    kilometres = lambda x, y: str(x/1000)
+    ax.xaxis.set_major_formatter(kilometres)
+    ax.yaxis.set_major_formatter(kilometres)
+    ax.set_xlabel("x (km)")
+    ax.set_ylabel("z (km)")
 
 
 #plotp(500, 300000)
 #plotu(500, 300000)
-#plotcontour(100, 100, 200000)
+plotcontour(100, 100, 200000)
