@@ -13,7 +13,7 @@ g = 9.8
 hmax = 200
 L = 30000
 
-num_modes=20
+num_modes=40
 
 c = np.zeros(num_modes)
 k = np.zeros(num_modes)
@@ -159,5 +159,5 @@ def plotrhocontour(xsamples, zsamples, width):
 
 #plotp(500, 300000)
 #plotu(500, 300000)
-plotpcontour(250, 100, 200000)
+#plotpcontour(250, 100, 200000)
 plotrhocontour(250, 100, 200000)
