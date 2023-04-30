@@ -13,24 +13,27 @@ g = 9.8
 hmax = 200
 L = 30000
 
-num_modes=40
+num_modes=15
 
-c = np.zeros(num_modes)
-k = np.zeros(num_modes)
-T = np.zeros(num_modes, dtype="cdouble")
-A = np.zeros(num_modes, dtype="cdouble")
-B = np.zeros(num_modes, dtype="cdouble")
-C = np.zeros(num_modes, dtype="cdouble")
-D = np.zeros(num_modes, dtype="cdouble")
-
-for n in range(1, num_modes+1):
-    c[n-1] = (N*H)/(n*pi)
-    k[n-1] = sqrt(omega**2 - f**2)/(c[n-1])
-    T[n-1] = 2j*rhobar*U_0*(k[n-1]**2)*(c[n-1]**2)/(omega*H)
-    A[n-1] = (1j*(pi**2)*T[n-1]*hmax)/((k[n-1]**3)*(L**2) - 4*(pi**2)*k[n-1])
-    B[n-1] = -((1j*(pi**2)*T[n-1]*hmax)/((k[n-1]**3)*(L**2) - 4*(pi**2)*k[n-1]))*np.exp(1j*k[n-1]*L)
-    C[n-1] = A[n-1] + B[n-1]
-    D[n-1] = A[n-1] + B[n-1]*np.exp(-2j*k[n-1]*L)
+def compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L):
+    c = np.zeros(num_modes)
+    k = np.zeros(num_modes)
+    T = np.zeros(num_modes, dtype="cdouble")
+    A = np.zeros(num_modes, dtype="cdouble")
+    B = np.zeros(num_modes, dtype="cdouble")
+    C = np.zeros(num_modes, dtype="cdouble")
+    D = np.zeros(num_modes, dtype="cdouble")
+    
+    for n in range(1, num_modes+1):
+        c[n-1] = (N*H)/(n*pi)
+        k[n-1] = sqrt(omega**2 - f**2)/(c[n-1])
+        T[n-1] = 2j*rhobar*U_0*(k[n-1]**2)*(c[n-1]**2)/(omega*H)
+        A[n-1] = (1j*(pi**2)*T[n-1]*hmax)/((k[n-1]**3)*(L**2) - 4*(pi**2)*k[n-1])
+        B[n-1] = -((1j*(pi**2)*T[n-1]*hmax)/((k[n-1]**3)*(L**2) - 4*(pi**2)*k[n-1]))*np.exp(1j*k[n-1]*L)
+        C[n-1] = A[n-1] + B[n-1]
+        D[n-1] = A[n-1] + B[n-1]*np.exp(-2j*k[n-1]*L)
+        
+    return c, k, T, A, B, C, D
 
 def psi_n(n, z):
     return ((-1)**n)*cos((n*pi*z)/H)
@@ -38,7 +41,7 @@ def psi_n(n, z):
 def phi_n(n, z):
     return ((-1)**n)*(H/(n*pi))*sin(n*pi*z/H)
 
-def phat_n(n, x):
+def phat_n(n, x, c, k, T, A, B, C, D):
     if x <= 0:
         return C[n-1]*np.exp(-1j*k[n-1]*x)
     elif x > 0 and x < L:
@@ -46,43 +49,44 @@ def phat_n(n, x):
     elif x >= L:
         return D[n-1]*np.exp(1j*k[n-1]*x)
 
-def pprime_n(n, x, t):
-    return np.real(phat_n(n, x)*np.exp(-1j*omega*t))
+def pprime_n(n, x, t, c, k, T, A, B, C, D):
+    return np.real(phat_n(n, x, c, k, T, A, B, C, D)*np.exp(-1j*omega*t))
 
-def pprime(x, z, t):
+def pprime(x, z, t, c, k, T, A, B, C, D):
     total = 0
     for n in range(1, num_modes+1):
-        total += pprime_n(n, x, t) * psi_n(n, z)
+        total += pprime_n(n, x, t, c, k, T, A, B, C, D) * psi_n(n, z)
     return total
 
-def rhoprime_n(n, x, t):
-    return ((n**2)*(pi**2)/(g*(N**2)*(H**2)))*pprime_n(n, x, t)
+def rhoprime_n(n, x, t, c, k, T, A, B, C, D):
+    return ((n**2)*(pi**2)/(g*(N**2)*(H**2)))*pprime_n(n, x, t, c, k, T, A, B, C, D)
 
-def rhoprime(x, z, t):
+def rhoprime(x, z, t, c, k, T, A, B, C, D):
     total = 0
     for n in range(1, num_modes+1):
-        total+= rhoprime_n(n, x, t) * phi_n(n, z)
+        total+= rhoprime_n(n, x, t, c, k, T, A, B, C, D) * phi_n(n, z)
     result = total * (N**2)
     return result
 
-def uhat_n(n, x):
+def uhat_n(n, x, c, k, T, A, B, C, D):
     if x <= 0:
-        return (omega*C[n-1]/(rhobar*k[n-1]*c[n-1]**2))*np.exp(-1j*k[n-1]*x)
+        return -(omega*C[n-1]/(rhobar*k[n-1]*c[n-1]**2))*np.exp(-1j*k[n-1]*x)
     elif x > 0 and x < L:
-        return (omega/(rhobar*(k[n-1]**2)*(c[n-1]**2)))*(-k[n-1]*A[n-1]*np.exp(1j*k[n-1]*x) + k[n-1]*B[n-1]*np.exp(-1j*k[n-1]*x) + (4j*(pi**2)*T[n-1]*hmax/((L**2)*(k[n-1]**2) - 4*pi**2))*cos(2*pi*x/L))
+        return (omega/(rhobar*(k[n-1]**2)*(c[n-1]**2)))*(k[n-1]*A[n-1]*np.exp(1j*k[n-1]*x) - k[n-1]*B[n-1]*np.exp(-1j*k[n-1]*x) - (4j*(pi**2)*T[n-1]*hmax/((L**2)*(k[n-1]**2) - 4*pi**2))*cos(2*pi*x/L))
     elif x >= L:
-        return -(omega*D[n-1]/(rhobar*k[n-1]*c[n-1]**2))*np.exp(1j*k[n-1]*x)
+        return (omega*D[n-1]/(rhobar*k[n-1]*c[n-1]**2))*np.exp(1j*k[n-1]*x)
 
-def u_n(n, x, t):
-    return np.real(uhat_n(n, x) * np.exp(-1j*omega*t))
+def u_n(n, x, t, c, k, T, A, B, C, D):
+    return np.real(uhat_n(n, x, c, k, T, A, B, C, D) * np.exp(-1j*omega*t))
 
-def u(x, z, t):
+def u(x, z, t, c, k, T, A, B, C, D):
     total = 0
     for n in range(1, num_modes+1):
-        total += u_n(n, x, t) * psi_n(n, z)
+        total += u_n(n, x, t, c, k, T, A, B, C, D) * psi_n(n, z)
     return total
 
 def plotp(samples, width):
+    c, k, T, A, B, C, D = compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L)
     xs = np.linspace(-width, L + width, samples)
     ys = np.zeros(samples)
     for h in range(5):
@@ -94,10 +98,11 @@ def plotp(samples, width):
         plt.title("h = " + str(z))
         for t in range(4):
             for i in range(len(xs)):
-                ys[i] = pprime(xs[i], z, t*pi/(2*omega))
+                ys[i] = pprime(xs[i], z, t*pi/(2*omega), c, k, T, A, B, C, D)
             plt.plot(xs, ys)
 
 def plotu(samples, width):
+    c, k, T, A, B, C, D = compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L)
     xs = np.linspace(-width, L + width, samples)
     ys = np.zeros(samples)
     for h in range(5):
@@ -109,10 +114,11 @@ def plotu(samples, width):
         plt.title("h = " + str(z))
         for t in range(4):
             for i in range(len(xs)):
-                ys[i] = u(xs[i], z, t*pi/(2*omega))
+                ys[i] = u(xs[i], z, t*pi/(2*omega), c, k, T, A, B, C, D)
             plt.plot(xs, ys)
-
+            
 def plotpcontour(xsamples, zsamples, width):
+    c, k, T, A, B, C, D = compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L)
     xs = np.linspace(-width, L + width, xsamples)
     zs = np.linspace(-4000, 0, zsamples)
     
@@ -122,7 +128,7 @@ def plotpcontour(xsamples, zsamples, width):
     
     for zm in range(zsamples):
         for xm in range(xsamples):
-            pprimes[zm, xm] = pprime(xs[xm], zs[zm], 0)
+            pprimes[zm, xm] = pprime(xs[xm], zs[zm], 0, c, k, T, A, B, C, D)
             pzeros[zm, xm] = -rhobar*g*zs[zm]
     
     ps = pprimes + pzeros
@@ -135,8 +141,9 @@ def plotpcontour(xsamples, zsamples, width):
     ax.set_ylabel("z (km)")
 
 def plotrhocontour(xsamples, zsamples, width):
+    c, k, T, A, B, C, D = compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L)
     xs = np.linspace(-width, L + width, xsamples)
-    zs = np.linspace(-4000, 100, zsamples)
+    zs = np.linspace(-4000, 0, zsamples)
     
     rhoprimes = np.zeros((zsamples, xsamples))
     rhozeros = np.zeros((zsamples, xsamples))
@@ -144,7 +151,7 @@ def plotrhocontour(xsamples, zsamples, width):
     
     for zm in range(zsamples):
         for xm in range(xsamples):
-            rhoprimes[zm, xm] = rhoprime(xs[xm], zs[zm], 0)
+            rhoprimes[zm, xm] = rhoprime(xs[xm], zs[zm], 0, c, k, T, A, B, C, D)
             rhozeros[zm, xm] = -10*zs[zm] #NEEDS ACTUALLY CORRECTING
     
     rhos = rhoprimes + rhozeros
@@ -156,8 +163,43 @@ def plotrhocontour(xsamples, zsamples, width):
     ax.set_xlabel("x (km)")
     ax.set_ylabel("z (km)")
 
+def energy_flux(x, t, c, k, T, A, B, C, D):
+    total = 0
+    for n in range(1, num_modes+1):
+        total += u_n(n, x, t, c, k, T, A, B, C, D)*pprime_n(n, x, t, c, k, T, A, B, C, D)
+    return total
+
+def compute_energy(x, samples, c, k, T, A, B, C, D):
+    ts = np.linspace(0, 2*pi/omega, samples)
+    energies = np.zeros(samples)
+    for i in range(samples):
+        energies[i] = energy_flux(x, ts[i], c, k, T, A, B, C, D)
+    energy = (omega*H/(4*pi))*np.trapz(energies, x=ts)
+    return energy
+
+def plot_energy_L(Lmin, Lmax, Lsamples, tsamples):
+    Ls = np.linspace(Lmin, Lmax, Lsamples)
+    ys = np.zeros(Lsamples)
+    for i in range(Lsamples):
+        c, k, T, A, B, C, D = compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, Ls[i])
+        ys[i] = -2*compute_energy(0, tsamples, c, k, T, A, B, C, D)
+    plt.plot(Ls, ys)
+
+def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples, tsamples):
+    hmaxs = np.linspace(hmaxmin, hmaxmax, hmaxsamples)
+    ys = np.zeros(hmaxsamples)
+    for i in range(hmaxsamples):
+        c, k, T, A, B, C, D = compute_coefficients(N, H, omega, f, U_0, rhobar, hmaxs[i], L)
+        ys[i] = -2*compute_energy(0, tsamples, c, k, T, A, B, C, D)
+    plt.plot(hmaxs, ys)
+    
+
+
 
 #plotp(500, 300000)
 #plotu(500, 300000)
 #plotpcontour(250, 100, 200000)
-plotrhocontour(250, 100, 200000)
+#plotrhocontour(250, 100, 200000)
+
+#plot_energy_L(1000, 1000000, 100, 5)
+plot_energy_hmax(0, 4000, 100, 5)
