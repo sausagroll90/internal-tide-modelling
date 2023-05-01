@@ -6,7 +6,7 @@ N = 0.003
 H = 4000
 omega = 0.00014
 f = 0.00005
-U_0 = 10000
+U_0 = 0.04
 rhobar = 1025
 g = 9.8
 
@@ -72,7 +72,7 @@ def uhat_n(n, x, c, k, T, A, B, C, D):
     if x <= 0:
         return -(omega*C[n-1]/(rhobar*k[n-1]*c[n-1]**2))*np.exp(-1j*k[n-1]*x)
     elif x > 0 and x < L:
-        return (omega/(rhobar*(k[n-1]**2)*(c[n-1]**2)))*(k[n-1]*A[n-1]*np.exp(1j*k[n-1]*x) - k[n-1]*B[n-1]*np.exp(-1j*k[n-1]*x) - (4j*(pi**2)*T[n-1]*hmax/((L**2)*(k[n-1]**2) - 4*pi**2))*cos(2*pi*x/L))
+        return (omega/(rhobar*(k[n-1]**2)*(c[n-1]**2)))*(k[n-1]*A[n-1]*np.exp(1j*k[n-1]*x) - k[n-1]*B[n-1]*np.exp(-1j*k[n-1]*x) - (2j*(pi**2)*T[n-1]*hmax/((L**2)*(k[n-1]**2) - 4*pi**2))*cos(2*pi*x/L))
     elif x >= L:
         return (omega*D[n-1]/(rhobar*k[n-1]*c[n-1]**2))*np.exp(1j*k[n-1]*x)
 
@@ -108,7 +108,7 @@ def plotu(samples, width):
     for h in range(5):
         z =  -h*1000
         plt.figure()
-        plt.axis([-width, L + width, -0.25, 0.25])
+        plt.axis([-width, L + width, -10000, 10000])
         plt.xlabel("x")
         plt.ylabel("u")
         plt.title("h = " + str(z))
@@ -183,7 +183,12 @@ def plot_energy_L(Lmin, Lmax, Lsamples, tsamples):
     for i in range(Lsamples):
         c, k, T, A, B, C, D = compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, Ls[i])
         ys[i] = -2*compute_energy(0, tsamples, c, k, T, A, B, C, D)
-    plt.plot(Ls, ys)
+    fig, ax = plt.subplots()
+    ax.plot(Ls, ys, color="k")
+    kilometres = lambda x, y: str(x/1000)
+    ax.xaxis.set_major_formatter(kilometres)
+    ax.set_xlabel("x (km)")
+    ax.set_ylabel("E (J)")
 
 def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples, tsamples):
     hmaxs = np.linspace(hmaxmin, hmaxmax, hmaxsamples)
@@ -191,15 +196,19 @@ def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples, tsamples):
     for i in range(hmaxsamples):
         c, k, T, A, B, C, D = compute_coefficients(N, H, omega, f, U_0, rhobar, hmaxs[i], L)
         ys[i] = -2*compute_energy(0, tsamples, c, k, T, A, B, C, D)
-    plt.plot(hmaxs, ys)
+    fig, ax = plt.subplots()
+    ax.plot(hmaxs, ys, color="k")
+    ax.set_xlabel("x (m)")
+    ax.set_ylabel("E (J)")
     
 
 
 
 #plotp(500, 300000)
-#plotu(500, 300000)
+#plotu(500, 30000)
 #plotpcontour(250, 100, 200000)
 #plotrhocontour(250, 100, 200000)
 
 #plot_energy_L(1000, 1000000, 100, 5)
-plot_energy_hmax(0, 4000, 100, 5)
+plot_energy_hmax(0, 2000, 100, 5)
+

@@ -6,7 +6,7 @@ N = 0.003
 H = 4000
 omega = 0.00014
 f = 0.00005
-U_0 = 10000 #for exaggeration, real life is =0.04
+U_0 = 0.04
 rhobar = 1025
 g = 9.8
 
@@ -69,7 +69,6 @@ def rhoprime(x, z, t, c, k, T, A, B, D, E):
     return result
 
 def uhat_n(n, x, c, k, T, A, B, D, E):
-    c, k, T, A, B, D, E = compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L)
     if x < 0:
         return -(omega*D[n-1]/(rhobar*k[n-1]*c[n-1]**2))*np.exp(-1j*k[n-1]*x)
     elif x >= 0 and x <= L:
@@ -183,16 +182,24 @@ def plot_energy_L(Lmin, Lmax, Lsamples, tsamples):
     ys = np.zeros(Lsamples)
     for i in range(Lsamples):
         c, k, T, A, B, D, E = compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, Ls[i])
-        ys[i] = -2*compute_energy(0, tsamples, c, k, T, A, B, D, E)
-    plt.plot(Ls, ys)
-    
+        ys[i] = -2*compute_energy(-1, tsamples, c, k, T, A, B, D, E)
+    fig, ax = plt.subplots()
+    ax.plot(Ls, ys, color="k")
+    kilometres = lambda x, y: str(x/1000)
+    ax.xaxis.set_major_formatter(kilometres)
+    ax.set_xlabel("x (km)")
+    ax.set_ylabel("E (J)")
+
 def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples, tsamples):
     hmaxs = np.linspace(hmaxmin, hmaxmax, hmaxsamples)
     ys = np.zeros(hmaxsamples)
     for i in range(hmaxsamples):
         c, k, T, A, B, C, D = compute_coefficients(N, H, omega, f, U_0, rhobar, hmaxs[i], L)
-        ys[i] = -2*compute_energy(0, tsamples, c, k, T, A, B, C, D)
-    plt.plot(hmaxs, ys)
+        ys[i] = -2*compute_energy(-1, tsamples, c, k, T, A, B, C, D)
+    fig, ax = plt.subplots()
+    ax.plot(hmaxs, ys, color="k")
+    ax.set_xlabel("x (m)")
+    ax.set_ylabel("E (J)")
 
 
 #plotp(500, 300000)
@@ -202,4 +209,5 @@ def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples, tsamples):
 
 
 #plot_energy_L(1000, 1000000, 100, 5)
-plot_energy_hmax(0, 4000, 100, 5)
+plot_energy_hmax(0, 2000, 100, 5)
+
