@@ -10,10 +10,10 @@ U_0 = 0.04
 rhobar = 1025
 g = 9.8
 
-hmax = 200
+hmax = 500
 L = 30000
 
-num_modes=20
+num_modes=30
 
 def compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L):
     c = np.zeros(num_modes)
@@ -116,6 +116,42 @@ def plotu(samples, width):
             for i in range(len(xs)):
                 ys[i] = u(xs[i], z, t*pi/(2*omega), c, k, T, A, B, D, E)
             plt.plot(xs, ys)
+
+def plotpprimecontour(xsamples, zsamples, width):
+    c, k, T, A, B, D, E = compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L)
+    xs = np.linspace(-width, L + width, xsamples)
+    zs = np.linspace(-4000, 0, zsamples)  
+    pprimes = np.zeros((zsamples, xsamples))
+    
+    for zm in range(zsamples):
+        for xm in range(xsamples):
+            pprimes[zm, xm] = pprime(xs[xm], zs[zm], 0, c, k, T, A, B, D, E)
+            
+    fig, ax = plt.subplots()
+    ax.contour(xs, zs, pprimes, 10, colors="k")
+    kilometres = lambda x, y: str(x/1000)
+    ax.xaxis.set_major_formatter(kilometres)
+    ax.yaxis.set_major_formatter(kilometres)
+    ax.set_xlabel("x (km)")
+    ax.set_ylabel("z (km)")
+
+def plotucontour(xsamples, zsamples, width):
+    c, k, T, A, B, D, E = compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L)
+    xs = np.linspace(-width, L + width, xsamples)
+    zs = np.linspace(-4000, 0, zsamples)   
+    us = np.zeros((zsamples, xsamples))
+    
+    for zm in range(zsamples):
+        for xm in range(xsamples):
+            us[zm, xm] = u(xs[xm], zs[zm], 0, c, k, T, A, B, D, E)
+            
+    fig, ax = plt.subplots()
+    ax.contour(xs, zs, us, 10, colors="k")
+    kilometres = lambda x, y: str(x/1000)
+    ax.xaxis.set_major_formatter(kilometres)
+    ax.yaxis.set_major_formatter(kilometres)
+    ax.set_xlabel("x (km)")
+    ax.set_ylabel("z (km)")
             
 def plotpcontour(xsamples, zsamples, width):
     c, k, T, A, B, D, E = compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L)
@@ -152,7 +188,7 @@ def plotrhocontour(xsamples, zsamples, width):
     for zm in range(zsamples):
         for xm in range(xsamples):
             rhoprimes[zm, xm] = rhoprime(xs[xm], zs[zm], 0, c, k, T, A, B, D, E)
-            rhozeros[zm, xm] = -10*zs[zm] #NEEDS ACTUALLY CORRECTING
+            rhozeros[zm, xm] = -((rhobar*N**2)/g)*zs[zm]
     
     rhos = rhoprimes + rhozeros
     fig, ax = plt.subplots()
@@ -187,7 +223,7 @@ def plot_energy_L(Lmin, Lmax, Lsamples, tsamples):
     ax.plot(Ls, ys, color="k")
     kilometres = lambda x, y: str(x/1000)
     ax.xaxis.set_major_formatter(kilometres)
-    ax.set_xlabel("x (km)")
+    ax.set_xlabel("L (km)")
     ax.set_ylabel("E (J)")
 
 def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples, tsamples):
@@ -198,16 +234,18 @@ def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples, tsamples):
         ys[i] = -2*compute_energy(-1, tsamples, c, k, T, A, B, C, D)
     fig, ax = plt.subplots()
     ax.plot(hmaxs, ys, color="k")
-    ax.set_xlabel("x (m)")
+    ax.set_xlabel("$h_{max}$ (m)")
     ax.set_ylabel("E (J)")
 
 
 #plotp(500, 300000)
 #plotu(500, 300000)
+#plotpprimecontour(250, 100, 200000)
+plotucontour(250, 100, 200000)
 #plotpcontour(250, 100, 200000)
 #plotrhocontour(250, 100, 200000)
 
 
 #plot_energy_L(1000, 1000000, 100, 5)
-plot_energy_hmax(0, 2000, 100, 5)
+#plot_energy_hmax(0, 2000, 100, 5)
 
