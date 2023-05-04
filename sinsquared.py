@@ -6,14 +6,14 @@ N = 0.003
 H = 4000
 omega = 0.00014
 f = 0.00005
-U_0 = 0.04
+U_0 = 0.4
 rhobar = 1025
 g = 9.8
 
-hmax = 200
+hmax = 500
 L = 30000
 
-num_modes=15
+num_modes=30
 
 def compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L):
     c = np.zeros(num_modes)
@@ -152,7 +152,7 @@ def plotrhocontour(xsamples, zsamples, width):
     for zm in range(zsamples):
         for xm in range(xsamples):
             rhoprimes[zm, xm] = rhoprime(xs[xm], zs[zm], 0, c, k, T, A, B, C, D)
-            rhozeros[zm, xm] = -10*zs[zm] #NEEDS ACTUALLY CORRECTING
+            rhozeros[zm, xm] = -((rhobar*N**2)/g)*zs[zm]
     
     rhos = rhoprimes + rhozeros
     fig, ax = plt.subplots()
@@ -187,7 +187,7 @@ def plot_energy_L(Lmin, Lmax, Lsamples, tsamples):
     ax.plot(Ls, ys, color="k")
     kilometres = lambda x, y: str(x/1000)
     ax.xaxis.set_major_formatter(kilometres)
-    ax.set_xlabel("x (km)")
+    ax.set_xlabel("L (km)")
     ax.set_ylabel("E (J)")
 
 def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples, tsamples):
@@ -198,7 +198,7 @@ def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples, tsamples):
         ys[i] = -2*compute_energy(0, tsamples, c, k, T, A, B, C, D)
     fig, ax = plt.subplots()
     ax.plot(hmaxs, ys, color="k")
-    ax.set_xlabel("x (m)")
+    ax.set_xlabel("$h_{max}$ (m)")
     ax.set_ylabel("E (J)")
     
 
@@ -207,8 +207,8 @@ def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples, tsamples):
 #plotp(500, 300000)
 #plotu(500, 30000)
 #plotpcontour(250, 100, 200000)
-#plotrhocontour(250, 100, 200000)
+plotrhocontour(250, 100, 200000)
 
 #plot_energy_L(1000, 1000000, 100, 5)
-plot_energy_hmax(0, 2000, 100, 5)
+#plot_energy_hmax(0, 2000, 100, 5)
 
