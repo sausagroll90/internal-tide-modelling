@@ -6,7 +6,7 @@ N = 0.003
 H = 4000
 omega = 0.00014
 f = 0.00005
-U_0 = 0.4
+U_0 = 0.04
 rhobar = 1025
 g = 9.8
 
@@ -163,43 +163,38 @@ def plotrhocontour(xsamples, zsamples, width):
     ax.set_xlabel("x (km)")
     ax.set_ylabel("z (km)")
 
-def energy_flux(x, t, c, k, T, A, B, C, D):
+def J_n(n, x, c, k, T, A, B, C, D):
+    return (H/4)*np.real(phat_n(n, x, c, k, T, A, B, C, D)*np.conjugate(uhat_n(n, x, c, k, T, A, B, C, D)))
+
+def J(x, c, k, T, A, B, C, D):
     total = 0
     for n in range(1, num_modes+1):
-        total += u_n(n, x, t, c, k, T, A, B, C, D)*pprime_n(n, x, t, c, k, T, A, B, C, D)
+        total += J_n(n, x, c, k, T, A, B, C, D)
     return total
 
-def compute_energy(x, samples, c, k, T, A, B, C, D):
-    ts = np.linspace(0, 2*pi/omega, samples)
-    energies = np.zeros(samples)
-    for i in range(samples):
-        energies[i] = energy_flux(x, ts[i], c, k, T, A, B, C, D)
-    energy = (omega*H/(4*pi))*np.trapz(energies, x=ts)
-    return energy
-
-def plot_energy_L(Lmin, Lmax, Lsamples, tsamples):
+def plot_energy_L(Lmin, Lmax, Lsamples):
     Ls = np.linspace(Lmin, Lmax, Lsamples)
-    ys = np.zeros(Lsamples)
+    Js = np.zeros(Lsamples)
     for i in range(Lsamples):
         c, k, T, A, B, C, D = compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, Ls[i])
-        ys[i] = -2*compute_energy(0, tsamples, c, k, T, A, B, C, D)
+        Js[i] = -1*J(-1, c, k, T, A, B, C, D) + J(L+1, c, k, T, A, B, C, D)
     fig, ax = plt.subplots()
-    ax.plot(Ls, ys, color="k")
+    ax.plot(Ls, Js, color="k")
     kilometres = lambda x, y: str(x/1000)
     ax.xaxis.set_major_formatter(kilometres)
     ax.set_xlabel("L (km)")
-    ax.set_ylabel("E (J)")
+    ax.set_ylabel("J (W m$^{-1}$)")
 
-def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples, tsamples):
+def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples):
     hmaxs = np.linspace(hmaxmin, hmaxmax, hmaxsamples)
-    ys = np.zeros(hmaxsamples)
+    Js = np.zeros(hmaxsamples)
     for i in range(hmaxsamples):
         c, k, T, A, B, C, D = compute_coefficients(N, H, omega, f, U_0, rhobar, hmaxs[i], L)
-        ys[i] = -2*compute_energy(0, tsamples, c, k, T, A, B, C, D)
+        Js[i] = -1*J(-1, c, k, T, A, B, C, D) + J(L+1, c, k, T, A, B, C, D)
     fig, ax = plt.subplots()
-    ax.plot(hmaxs, ys, color="k")
+    ax.plot(hmaxs, Js, color="k")
     ax.set_xlabel("$h_{max}$ (m)")
-    ax.set_ylabel("E (J)")
+    ax.set_ylabel("J (W m$^{-1}$)")
     
 
 
@@ -207,8 +202,8 @@ def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples, tsamples):
 #plotp(500, 300000)
 #plotu(500, 30000)
 #plotpcontour(250, 100, 200000)
-plotrhocontour(250, 100, 200000)
+#plotrhocontour(250, 100, 200000)
 
-#plot_energy_L(1000, 1000000, 100, 5)
-#plot_energy_hmax(0, 2000, 100, 5)
+plot_energy_L(1000, 1000000, 100)
+plot_energy_hmax(0, 2000, 100)
 
