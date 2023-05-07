@@ -12,9 +12,9 @@ g = 9.8
 
 hmax = 500
 L = 60000
-m = 3
+m = 4
 
-num_modes=30
+num_modes=40
 
 def compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L, m):
     c = np.zeros(num_modes)
@@ -165,9 +165,24 @@ def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples):
     ax.set_xlabel("$h_{max}$ (m)")
     ax.set_ylabel("J (W m$^{-1}$)")
 
+def plot_spectrum(modes, L, hmax, m):
+    c, k, T, A, B, C, D = compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L, m)
+    ns = np.arange(1, modes+1)
+    J_ns = np.zeros(modes)
+    for n in ns:
+        J_ns[n-1] = -1*J_n(n, -1, c, k, T, A, B, C, D) + J_n(n, L+1, c, k, T, A, B, C, D)
+    J_ns = np.log10(J_ns)
+    ns = np.log10(ns)
+    print(J_ns)
+    fig, ax = plt.subplots()
+    ax.plot(ns, J_ns, "xk")
+    ax.set_xlabel("log(n)")
+    ax.set_ylabel("log(J_n) (W m$^{-1}$)")
+
 
 #plotpcontour(250, 100, 200000)
 #plotrhocontour(250, 100, 200000)
 
-plot_energy_L(1000, 1000000, 200)
-plot_energy_hmax(0, H/2, 100)
+#plot_energy_L(1000, 1000000, 200)
+#plot_energy_hmax(0, H/2, 100)
+plot_spectrum(40, 500000, 500, 4)
