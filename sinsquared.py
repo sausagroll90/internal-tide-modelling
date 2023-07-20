@@ -11,9 +11,9 @@ rhobar = 1025
 g = 9.8
 
 hmax = 500
-L = 30000
+L = 184000
 
-num_modes=40
+num_modes=30
 
 def compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L):
     c = np.zeros(num_modes)
@@ -180,6 +180,11 @@ def plot_energy_L(Lmin, Lmax, Lsamples):
         Js[i] = -1*J(-1, c, k, T, A, B, C, D) + J(L+1, c, k, T, A, B, C, D)
     fig, ax = plt.subplots()
     ax.plot(Ls, Js, color="k")
+    #ax.axvline(184000, 0, 1, linestyle="dotted", color="k")
+    ax.axvline(368000, 0, 1, linestyle="dotted", color="k")
+    ax.axvline(552000, 0, 1, linestyle="dotted", color="k")
+    ax.axvline(736000, 0, 1, linestyle="dotted", color="k")
+    ax.axvline(920000, 0, 1, linestyle="dotted", color="k")
     kilometres = lambda x, y: str(x/1000)
     ax.xaxis.set_major_formatter(kilometres)
     ax.set_xlabel("L (km)")
@@ -196,7 +201,7 @@ def plot_energy_hmax(hmaxmin, hmaxmax, hmaxsamples):
     ax.set_xlabel("$h_{max}$ (m)")
     ax.set_ylabel("J (W m$^{-1}$)")
     
-def plot_spectrum(modes, L, hmax):
+def plot_spectrum(modes):
     c, k, T, A, B, C, D = compute_coefficients(N, H, omega, f, U_0, rhobar, hmax, L)
     ns = np.arange(1, modes+1)
     J_ns = np.zeros(modes)
@@ -214,8 +219,11 @@ def plot_spectrum(modes, L, hmax):
 #plotp(500, 300000)
 #plotu(500, 30000)
 #plotpcontour(250, 100, 200000)
-#plotrhocontour(250, 100, 200000)
 
-plot_energy_L(1000, 1000000, 100)
+#U_0 = 0.4
+#plotrhocontour(250, 100, 300000)
+
+U_0 = 0.04
+plot_energy_L(320000, 1000000, 100)
 #plot_energy_hmax(0, 2000, 100)
-plot_spectrum(10, 250000, 500)
+#plot_spectrum(30)
